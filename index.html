@@ -62,8 +62,15 @@
       font-size: 0.96rem;
     }
 
+    .controls {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
     .search {
-      width: min(340px, 100%);
+      width: min(260px, 100%);
       border: 1px solid rgba(148, 163, 184, 0.32);
       border-radius: 14px;
       background: rgba(15, 23, 42, 0.75);
@@ -77,6 +84,33 @@
     .search:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.18);
+    }
+
+    .toggle-container {
+      display: flex;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(148, 163, 184, 0.32);
+      border-radius: 14px;
+      padding: 0.25rem;
+      gap: 0.25rem;
+    }
+
+    .toggle-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.85rem;
+      padding: 0.6rem 0.85rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .toggle-btn.active {
+      background: var(--accent);
+      color: #0f172a;
+      font-weight: 600;
     }
 
     .stats {
@@ -166,9 +200,15 @@
     <div class="header">
       <div>
         <h1>Game Library</h1>
-        <p class="sub">Search and launch any game in a new <code>about:blank</code> tab.</p>
+        <p class="sub">Search and launch any game.</p>
       </div>
-      <input id="search" class="search" type="search" placeholder="Search games..." autocomplete="off" />
+      <div class="controls">
+        <input id="search" class="search" type="search" placeholder="Search games..." autocomplete="off" />
+        <div class="toggle-container" aria-label="Launch Mode">
+          <button type="button" class="toggle-btn active" data-mode="blank">about:blank</button>
+          <button type="button" class="toggle-btn" data-mode="local">Local</button>
+        </div>
+      </div>
     </div>
 
     <p class="stats" id="stats"></p>
@@ -228,16 +268,46 @@
     const search = document.getElementById('search');
     const stats = document.getElementById('stats');
     const grid = document.getElementById('grid');
+    const toggleBtns = document.querySelectorAll('.toggle-btn');
+
+    // Handle toggle switch selection & persistence
+    toggleBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        toggleBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        localStorage.setItem('gameLaunchMode', btn.dataset.mode);
+      });
+    });
+
+    // Restore saved mode if any
+    const savedMode = localStorage.getItem('gameLaunchMode');
+    if (savedMode) {
+      toggleBtns.forEach(b => {
+        if (b.dataset.mode === savedMode) {
+          b.classList.add('active');
+        } else {
+          b.classList.remove('active');
+        }
+      });
+    }
 
     const titleFromFolder = (folder) => folder.replace(/[-_]+/g, ' ');
 
     const launchGame = (folder) => {
-      // Build an absolute URL so it resolves correctly inside about:blank
       const gameUrl = new URL(`${encodeURIComponent(folder)}/index.html`, window.location.href).href;
+      const activeMode = document.querySelector('.toggle-btn.active').dataset.mode;
+
+      if (activeMode === 'local') {
+        window.location.href = gameUrl;
+        return;
+      }
+
+      // about:blank mode
       const tab = window.open('about:blank', '_blank', 'noopener,noreferrer');
 
       if (!tab) {
-        alert('Pop-up blocked. Please allow pop-ups to launch games.');
+        // Fallback to local page if pop-ups are blocked
+        window.location.href = gameUrl;
         return;
       }
 
@@ -259,7 +329,7 @@
       fallback.className = 'fallback';
       fallback.textContent = folder.charAt(0);
 
-      // Array of possible icon filenames to check sequentially
+      // Try multiple common icon filenames sequentially
       const possibleIcons = ['icon.png', 'logo.png', 'thumb.png', 'thumbnail.png', 'image.png'];
       let iconIndex = 0;
 
@@ -267,14 +337,13 @@
         if (iconIndex < possibleIcons.length) {
           icon.src = `${encodeURIComponent(folder)}/${possibleIcons[iconIndex++]}`;
         } else {
-          // If all PNG names fail, hide image and show the text fallback letter
           icon.style.display = 'none';
           fallback.style.display = 'inline-flex';
         }
       };
 
       icon.addEventListener('error', tryNextIcon);
-      tryNextIcon(); // Kick off the first check
+      tryNextIcon();
 
       const label = document.createElement('span');
       label.className = 'name';
