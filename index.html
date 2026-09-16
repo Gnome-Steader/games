@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Game Library</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #070b17;
+      --panel: rgba(17, 24, 39, 0.78);
+      --panel-border: rgba(148, 163, 184, 0.22);
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #60a5fa;
+      --accent-2: #818cf8;
+      --shadow: 0 20px 45px rgba(2, 6, 23, 0.55);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 20%, rgba(96, 165, 250, 0.28), transparent 36%),
+        radial-gradient(circle at 80% 0%, rgba(129, 140, 248, 0.24), transparent 35%),
+        var(--bg);
+    }
+
+    .shell {
+      width: min(1100px, 94vw);
+      margin: 2.2rem auto;
+      padding: 1.35rem;
+      border-radius: 26px;
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .header {
+      display: flex;
+      gap: 1rem;
+      justify-content: space-between;
+      align-items: end;
+      flex-wrap: wrap;
+      margin-bottom: 1.2rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.45rem, 2vw, 2rem);
+      letter-spacing: 0.01em;
+    }
+
+    .sub {
+      margin: 0.35rem 0 0;
+      color: var(--muted);
+      font-size: 0.96rem;
+    }
+
+    .search {
+      width: min(340px, 100%);
+      border: 1px solid rgba(148, 163, 184, 0.32);
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.75);
+      color: var(--text);
+      font: inherit;
+      padding: 0.78rem 0.92rem;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .search:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.18);
+    }
+
+    .stats {
+      margin: 0.2rem 0 1rem;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 0.82rem;
+    }
+
+    .game {
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 14px;
+      padding: 0.7rem;
+      background: rgba(15, 23, 42, 0.76);
+      display: flex;
+      align-items: center;
+      gap: 0.72rem;
+      color: var(--text);
+      cursor: pointer;
+      transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+      text-align: left;
+    }
+
+    .game:hover {
+      transform: translateY(-2px);
+      border-color: rgba(96, 165, 250, 0.82);
+      background: rgba(30, 41, 59, 0.92);
+    }
+
+    .game:focus-visible {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+    }
+
+    .icon,
+    .fallback {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      flex: 0 0 38px;
+      object-fit: cover;
+    }
+
+    .icon {
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      background: #0f172a;
+    }
+
+    .fallback {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+    }
+
+    .name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 0.93rem;
+      line-height: 1.2;
+    }
+
+    .empty {
+      grid-column: 1 / -1;
+      border: 1px dashed rgba(148, 163, 184, 0.4);
+      border-radius: 14px;
+      padding: 1.2rem;
+      text-align: center;
+      color: var(--muted);
+      background: rgba(15, 23, 42, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="header">
+      <div>
+        <h1>Game Library</h1>
+        <p class="sub">Search and launch any game in a new <code>about:blank</code> tab.</p>
+      </div>
+      <input id="search" class="search" type="search" placeholder="Search games..." autocomplete="off" />
+    </div>
+
+    <p class="stats" id="stats"></p>
+    <section class="grid" id="grid" aria-live="polite"></section>
+  </main>
+
+  <script>
+    const games = [
+    "1",
+    "10-minutes-till-dawn",
+    "100ng",
+    "1v1lol",
+    "1v1space",
+    "2048",
+    "2048-multitask",
+    "9007199254740992",
+    "DogeMiner",
+    "HexGL",
+    "OfflineParadise",
+    "Stickman-Survival",
+    "a-dance-of-fire-and-ice",
+    "achievementunlocked",
+    "adarkroom",
+    "adrenalinechallenge",
+    "adventure-drivers",
+    "ages-of-conflict",
+    "alienhominid",
+    "align-4",
+    "amidst-the-clouds",
+    "among-us",
+    "angry-sharks",
+    "aquapark-slides",
+    "astray",
+    "avalanche",
+    "awesometanks2",
+    "backrooms",
+    "bad-ice-cream",
+    "bad-ice-cream-2",
+    "bad-ice-cream-3",
+    "baldis-basics",
+    "ballistic-chickens",
+    "basket-random",
+    "basketball-stars",
+    "basketbros-io",
+    "battleforgondor",
+    "bigredbutton",
+    "bitlife",
+    "blacholesquare",
+    "blackknight",
+    "bloonstd",
+    "bloonstd2",
+    "bloxors",
+    "bntts",
+    "bobtherobber2",
+    "boxhead2play",
+    "boxing-random",
+    "breakingthebank",
+    "btts",
+    "burger-and-frights",
+    "cannon-basketball-4",
+    "canyondefense",
+    "cars-simulator",
+    "cell-machine",
+    "champion-island",
+    "championarcher",
+    "chill-radio",
+    "chrome-dino",
+    "circlo",
+    "cluster-rush",
+    "cnpingpong",
+    "connect3",
+    "cookie-clicker",
+    "core-ball",
+    "craftmine",
+    "creativekillchamber",
+    "crossyroad",
+    "csgo-clicker",
+    "ctr",
+    "ctr-holiday",
+    "ctr-tr",
+    "cubefield",
+    "cupcake2048",
+    "dante",
+    "deal-or-no-deal",
+    "death-run-3d",
+    "defend-the-tank",
+    "doctor-acorn2",
+    "doge2048",
+    "doodle-jump",
+    "doublewires",
+    "dragon-vs-bricks",
+    "draw-the-hill",
+    "drift-boss",
+    "drift-hunters",
+    "drive-mad",
+    "ducklife1",
+    "ducklife2",
+    "ducklife3",
+    "ducklife4",
+    "edge-surf",
+    "edgenotfound",
+    "eel-slap",
+    "elasticman",
+    "endlesswar3",
+    "escapingtheprison",
+    "evil-glitch",
+    "evolution",
+    "exo",
+    "factoryballs",
+    "fairsquares",
+    "fake-virus",
+    "fancypantsadventures",
+    "fireboywatergirlforesttemple",
+    "flappy-2048",
+    "flappy-bird",
+    "flappybird",
+    "flashtetris",
+    "flippy-fish",
+    "fnaw",
+    "fridaynightfunkin",
+    "froggys-battle",
+    "fruitninja",
+    "frying-nemo",
+    "game-inside",
+    "generic-fishing-game",
+    "geodash",
+    "georgeandtheprinter",
+    "getaway-shootout",
+    "gimme-the-airpod",
+    "glass-city",
+    "go-ball",
+    "goodnight",
+    "google-feud",
+    "google-snake",
+    "gravity-soccer",
+    "greybox",
+    "grindcraft",
+    "hackertype",
+    "handshakes",
+    "happy-hop",
+    "hba",
+    "helicopter",
+    "hexempire",
+    "hextris",
+    "hungry-lamu",
+    "idle-breakout",
+    "idle-shark",
+    "impossiblequiz",
+    "interactivebuddy",
+    "jetpack-joyride",
+    "js",
+    "just-fall",
+    "just-one-boss",
+    "kitchen-gun-game",
+    "kittencannon",
+    "knife-master",
+    "krunker",
+    "learntofly",
+    "learntofly2",
+    "madalin-stunt-cars-2",
+    "madalin-stunt-cars-3",
+    "mario",
+    "marvinspectrum",
+    "matrixrampage",
+    "meme2048",
+    "merge-round-racers",
+    "mineblocks",
+    "minecraft-15",
+    "minecraft-18",
+    "minecraft-classic",
+    "minecraftbeta",
+    "minesweeper",
+    "miniputt",
+    "missiles",
+    "motox3m",
+    "motox3m-pool",
+    "motox3m-spooky",
+    "motox3m-winter",
+    "motox3m2",
+    "my-rusty-submarine",
+    "n-gon",
+    "ninja",
+    "ninjavsevilcorp",
+    "noob-steve-parkour",
+    "ns-shaft",
+    "nsresurgence",
+    "om-bounce",
+    "ovo",
+    "pandemic2",
+    "papasburgeria",
+    "papaspizzaria",
+    "paperio2",
+    "papery-planes",
+    "particle-clicker",
+    "pixel-gun-survival",
+    "polybranch",
+    "popcat-classic",
+    "portalflash",
+    "precision-client",
+    "protektor",
+    "push-the-square",
+    "push-your-luck",
+    "rabbit-samurai",
+    "rabbit-samurai2",
+    "resent-client",
+    "retro-bowl",
+    "riddleschool",
+    "riddleschool2",
+    "riddleschool3",
+    "riddleschool4",
+    "riddleschool5",
+    "riddletransfer",
+    "riddletransfer2",
+    "rolling-forests",
+    "rolly-vortex",
+    "rooftop-snipers",
+    "ruffle",
+    "sand-game",
+    "sandboxels",
+    "santy-is-home",
+    "scrapmetal",
+    "shellshockers",
+    "shotinthedark",
+    "shuttledeck",
+    "sky-car-stunt",
+    "sleepingbeauty",
+    "slime-rush-td",
+    "slope",
+    "slope-2",
+    "slope-ball",
+    "sm64",
+    "smashkarts",
+    "smokingbarrels",
+    "snowbattle",
+    "soccer-random",
+    "soccer-skills",
+    "soldier-legend",
+    "solitaire",
+    "sort-the-court",
+    "soundboard",
+    "space-company",
+    "spacegarden",
+    "spinningrat",
+    "stack",
+    "stack-bump-3d",
+    "starve",
+    "station-141",
+    "stealingthediamond",
+    "stick-archers",
+    "stick-duel-battle",
+    "stick-merge",
+    "stickman-boost",
+    "stickman-golf",
+    "stickman-hook",
+    "stickwar",
+    "stormthehouse2",
+    "subway-surfers",
+    "subway-surfers-ny",
+    "superhot",
+    "supermarioconstruct",
+    "surviv",
+    "sushi-unroll",
+    "swerve",
+    "synesthesia",
+    "tactical-weapon-pack-2",
+    "tacticalassasin2",
+    "tank-trouble-2",
+    "tanuki-sunset",
+    "temple-run-2",
+    "the-final-earth",
+    "the-hotel",
+    "thebattle",
+    "theheist",
+    "there-is-no-game",
+    "thisistheonlylevel",
+    "tiny-fishing",
+    "tiny-islands",
+    "tosstheturtle",
+    "townscaper",
+    "tube-jumpers",
+    "tunnel-rush",
+    "tv-static",
+    "twitch-tetris",
+    "veloce",
+    "vex3",
+    "vex4",
+    "vex5",
+    "vex6",
+    "vex7",
+    "wallsmash",
+    "waterworks",
+    "weavesilk",
+    "webgl-fluid-simulation",
+    "webretro",
+    "win-the-whitehouse",
+    "wolf3d",
+    "wordle",
+    "worlds-hardest-game",
+    "worlds-hardest-game-2",
+    "x-trial-racing",
+    "xx142-b2exe",
+    "yoshifabrication",
+    "you-are-bezos",
+    "zombs-royale"
+    ];
+
+    const search = document.getElementById('search');
+    const stats = document.getElementById('stats');
+    const grid = document.getElementById('grid');
+
+    const titleFromFolder = (folder) => folder.replace(/[-_]+/g, ' ');
+
+    const launchGame = (folder) => {
+      const gamePath = `${encodeURIComponent(folder)}/index.html`;
+      const tab = window.open('about:blank', '_blank', 'noopener,noreferrer');
+
+      if (!tab) {
+        alert('Pop-up blocked. Please allow pop-ups to launch games.');
+        return;
+      }
+
+      tab.location.replace(gamePath);
+    };
+
+    const createGameCard = (folder) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'game';
+      button.setAttribute('aria-label', `Launch ${titleFromFolder(folder)}`);
+
+      const icon = document.createElement('img');
+      icon.className = 'icon';
+      icon.src = `${encodeURIComponent(folder)}/icon.png`;
+      icon.alt = '';
+      icon.loading = 'lazy';
+
+      const fallback = document.createElement('span');
+      fallback.className = 'fallback';
+      fallback.textContent = folder.charAt(0);
+
+      icon.addEventListener('error', () => {
+        icon.style.display = 'none';
+        fallback.style.display = 'inline-flex';
+      });
+
+      const label = document.createElement('span');
+      label.className = 'name';
+      label.textContent = titleFromFolder(folder);
+
+      button.append(icon, fallback, label);
+      button.addEventListener('click', () => launchGame(folder));
+      return button;
+    };
+
+    const render = () => {
+      const query = search.value.trim().toLowerCase();
+      const filtered = games.filter((folder) =>
+        folder.toLowerCase().includes(query) || titleFromFolder(folder).toLowerCase().includes(query)
+      );
+
+      grid.textContent = '';
+      stats.textContent = `Showing ${filtered.length} of ${games.length} games`;
+
+      if (!filtered.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = 'No games match your search.';
+        grid.append(empty);
+        return;
+      }
+
+      const fragment = document.createDocumentFragment();
+      filtered.forEach((folder) => fragment.append(createGameCard(folder)));
+      grid.append(fragment);
+    };
+
+    search.addEventListener('input', render);
+    render();
+  </script>
+</body>
+</html>
