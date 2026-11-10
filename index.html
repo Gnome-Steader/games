@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Game Library</title>
+  <title>Torpedo — Sinking the internet censorSHIP</title>
   <style>
     :root {
       color-scheme: dark;
@@ -191,6 +191,15 @@
     #close-player{border:1px solid rgba(148,163,184,.35);border-radius:10px;padding:.55rem .85rem;color:var(--text);background:#263b5d;cursor:pointer;font:inherit}
     #game-frame{display:block;width:100%;flex:1;border:0;background:#fff}
     @media(max-width:600px){.player-bar{height:50px}}
+    .tool-panel{margin-top:28px;padding:20px;border:1px solid var(--panel-border);border-radius:18px;background:rgba(15,23,42,.72);box-shadow:var(--shadow)}
+    .tool-panel h2{margin:0 0 7px;font-size:1.2rem}
+    .tool-panel p{color:var(--muted);font-size:.9rem;line-height:1.5;margin:0 0 12px}
+    .proxy-form{display:flex;gap:10px;flex-wrap:wrap}
+    .proxy-form input{flex:1;min-width:220px;border:1px solid rgba(148,163,184,.32);border-radius:12px;background:rgba(7,11,23,.85);color:var(--text);font:inherit;padding:12px 14px}
+    .proxy-form button{border:0;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#081225;font-weight:800;padding:12px 16px;cursor:pointer}
+    .proxy-form button:hover{filter:brightness(1.1)}
+    .proxy-password{display:inline-block;border:1px solid #a78bfa55;background:#8b5cf622;color:#ddd6fe;border-radius:9px;padding:7px 10px;font-size:13px;margin:0 0 12px}
+    #proxy-status{min-height:18px;margin-top:10px}
     .empty {
       grid-column: 1 / -1;
       border: 1px dashed rgba(148, 163, 184, 0.4);
@@ -210,9 +219,9 @@
   <main class="shell">
     <div class="header">
       <div>
-        <h1>Game Library</h1>
-        <p class="sub"><a href="./hub.html" style="color:#91baff">Open School Hub →</a></p>
-        <p class="sub">Search and launch any game.</p>
+        <h1>TORPEDO</h1>
+        <p class="sub" style="letter-spacing:.08em;text-transform:uppercase">Sinking the internet censorSHIP</p>
+        <p class="sub">Games and web tools. All in one place.</p>
         
       </div>
       <div class="controls">
@@ -223,6 +232,18 @@
 
     <p class="stats" id="stats"></p>
     <section class="grid" id="grid" aria-live="polite"></section>
+
+    <section class="tool-panel" aria-labelledby="proxy-heading">
+      <h2 id="proxy-heading">Web Proxy</h2>
+      <p>Open a website through the Torpedo Cloudflare Worker.</p>
+      <div class="proxy-password"><strong>Worker password:</strong> <code>123</code></div>
+      <form class="proxy-form" id="proxy-form">
+        <input id="proxy-target" type="url" inputmode="url" placeholder="https://example.com" required aria-label="Website URL">
+        <button type="submit">Open through proxy ↗</button>
+      </form>
+      <p id="proxy-status" role="status"></p>
+      <p>Only HTTP and HTTPS URLs are accepted. If the Worker requests authentication, enter the password shown above.</p>
+    </section>
   </main>
 
   <script>
@@ -381,6 +402,23 @@
     };
 
     search.addEventListener('input', render);
+
+    const proxyForm = document.getElementById('proxy-form');
+    const proxyTarget = document.getElementById('proxy-target');
+    const proxyStatus = document.getElementById('proxy-status');
+    const PROXY_BASE = 'https://cf-proxy.9nome.workers.dev/';
+    proxyForm.addEventListener('submit', event => {
+      event.preventDefault();
+      let destination;
+      try { destination = new URL(proxyTarget.value.trim()); }
+      catch { proxyStatus.textContent = 'Enter a valid full URL, such as https://example.com.'; return; }
+      if (!['http:', 'https:'].includes(destination.protocol)) {
+        proxyStatus.textContent = 'Only HTTP and HTTPS addresses are supported.';
+        return;
+      }
+      proxyStatus.textContent = 'Opening ' + destination.hostname + ' through the proxy…';
+      window.open(PROXY_BASE + destination.href, '_blank', 'noopener,noreferrer');
+    });
 
     fetch(UGS_MANIFEST)
       .then(response => {
