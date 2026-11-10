@@ -306,7 +306,11 @@
     const search = document.getElementById('search');
     const stats = document.getElementById('stats');
     const grid = document.getElementById('grid');
-    const titleFromFolder = (folder) => folder.replace(/^cl/i, '').replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    // UGS IDs use a `cl` catalog prefix; keep it for CDN paths, but never show it in the UI.
+    const gameName = (game) => {
+      const name = game.kind === 'ugs' ? game.id.replace(/^cl/i, '') : game.id;
+      return name.replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    };
 
     const closeGame = () => {
       player.classList.remove('open');
@@ -322,7 +326,7 @@
 
     // All games share this same in-page player.
     const launchGame = (game) => {
-      playerTitle.textContent = titleFromFolder(game.id);
+      playerTitle.textContent = gameName(game);
       player.classList.add('open');
       player.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
@@ -341,7 +345,7 @@
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'game';
-      button.setAttribute('aria-label', `Launch ${titleFromFolder(folder)}`);
+      button.setAttribute('aria-label', `Launch ${gameName(game)}`);
 
       const icon = document.createElement('img');
       icon.className = 'icon';
@@ -350,7 +354,7 @@
 
       const fallback = document.createElement('span');
       fallback.className = 'fallback';
-      fallback.textContent = folder.charAt(0);
+      fallback.textContent = gameName(game).charAt(0) || '?';
 
       // Try multiple common icon filenames sequentially
       const possibleIcons = ['icon.png', 'logo.png', 'thumb.png', 'thumbnail.png', 'image.png'];
@@ -372,7 +376,7 @@
 
       const label = document.createElement('span');
       label.className = 'name';
-      label.textContent = titleFromFolder(folder);
+      label.textContent = gameName(game);
 
       button.append(icon, fallback, label);
       button.addEventListener('click', () => launchGame(game));
@@ -382,7 +386,7 @@
     const render = () => {
       const query = search.value.trim().toLowerCase();
       const filtered = games.filter((game) =>
-        game.id.toLowerCase().includes(query) || titleFromFolder(game.id).toLowerCase().includes(query)
+        game.id.toLowerCase().includes(query) || gameName(game).toLowerCase().includes(query)
       );
 
       grid.textContent = '';
