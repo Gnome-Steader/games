@@ -184,6 +184,13 @@
       line-height: 1.2;
     }
 
+    #game-player{position:fixed;inset:0;z-index:50;display:none;flex-direction:column;background:#070b14}
+    #game-player.open{display:flex}
+    .player-bar{height:54px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 14px;background:#111827;border-bottom:1px solid var(--panel-border)}
+    #player-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+    #close-player{border:1px solid rgba(148,163,184,.35);border-radius:10px;padding:.55rem .85rem;color:var(--text);background:#263b5d;cursor:pointer;font:inherit}
+    #game-frame{display:block;width:100%;flex:1;border:0;background:#fff}
+    @media(max-width:600px){.player-bar{height:50px}}
     .empty {
       grid-column: 1 / -1;
       border: 1px dashed rgba(148, 163, 184, 0.4);
@@ -196,13 +203,17 @@
   </style>
 </head>
 <body>
+  <section id="game-player" aria-hidden="true">
+    <div class="player-bar"><span id="player-title">Loading game…</span><button id="close-player" type="button">Close game ✕</button></div>
+    <iframe id="game-frame" title="Game player" allow="autoplay; fullscreen; gamepad; clipboard-read; clipboard-write" allowfullscreen></iframe>
+  </section>
   <main class="shell">
     <div class="header">
       <div>
         <h1>Game Library</h1>
         <p class="sub"><a href="./hub.html" style="color:#91baff">Open School Hub →</a></p>
         <p class="sub">Search and launch any game.</p>
-        <p class="sub"><a href="./ugs.html" style="color:#91baff">Browse the Ultimate Game Stash catalog →</a></p>
+        
       </div>
       <div class="controls">
         <input id="search" class="search" type="search" placeholder="Search games..." autocomplete="off" />
@@ -218,7 +229,7 @@
   </main>
 
   <script>
-    const games = [
+    const localGames = [
       "1", "10-minutes-till-dawn", "100ng", "1v1lol", "1v1space", "2048", "2048-multitask", "9007199254740992",
       "DogeMiner", "HexGL", "OfflineParadise", "Stickman-Survival", "a-dance-of-fire-and-ice", "achievementunlocked",
       "adarkroom", "adrenalinechallenge", "adventure-drivers", "ages-of-conflict", "alienhominid", "align-4",
@@ -267,6 +278,13 @@
       "you-are-bezos"
     ];
 
+    const games = localGames.map(id => ({ id, kind: 'local' }));
+    const UGS_MANIFEST = './ugs-games.json';
+    const UGS_CDN_ROOT = 'https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile/UGS-Files/';
+    const player = document.getElementById('game-player');
+    const playerTitle = document.getElementById('player-title');
+    const gameFrame = document.getElementById('game-frame');
+
     const search = document.getElementById('search');
     const stats = document.getElementById('stats');
     const grid = document.getElementById('grid');
@@ -293,30 +311,38 @@
       });
     }
 
-    const titleFromFolder = (folder) => folder.replace(/[-_]+/g, ' ');
+    const titleFromFolder = (folder) => folder.replace(/^cl/i, '').replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
-    const launchGame = (folder) => {
-      const gameUrl = new URL(`${encodeURIComponent(folder)}/index.html`, window.location.href).href;
-      const activeMode = document.querySelector('.toggle-btn.active').dataset.mode;
-
-      if (activeMode === 'local') {
-        window.location.href = gameUrl;
-        return;
-      }
-
-      // about:blank mode
-      const tab = window.open('about:blank', '_blank', 'noopener,noreferrer');
-
-      if (!tab) {
-        // Fallback to local page if pop-ups are blocked
-        window.location.href = gameUrl;
-        return;
-      }
-
-      tab.location.replace(gameUrl);
+    const closeGame = () => {
+      player.classList.remove('open');
+      player.setAttribute('aria-hidden', 'true');
+      gameFrame.src = 'about:blank';
+      document.body.style.overflow = '';
     };
 
-    const createGameCard = (folder) => {
+    document.getElementById('close-player').addEventListener('click', closeGame);
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && player.classList.contains('open')) closeGame();
+    });
+
+    // All games share this same in-page player.
+    const launchGame = (game) => {
+      playerTitle.textContent = titleFromFolder(game.id);
+      player.classList.add('open');
+      player.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      gameFrame.src = 'about:blank';
+
+      if (game.kind === 'ugs') {
+        const filename = game.id.includes('.') && game.id.lastIndexOf('.') > 0 ? game.id : game.id + '.html';
+        gameFrame.src = UGS_CDN_ROOT + encodeURIComponent(filename);
+      } else {
+        gameFrame.src = new URL(`${encodeURIComponent(game.id)}/index.html`, window.location.href).href;
+      }
+    };
+
+    const createGameCard = (game) => {
+      const folder = game.id;
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'game';
@@ -337,7 +363,9 @@
 
       const tryNextIcon = () => {
         if (iconIndex < possibleIcons.length) {
-          icon.src = `${encodeURIComponent(folder)}/${possibleIcons[iconIndex++]}`;
+          icon.src = game.kind === 'ugs'
+            ? UGS_CDN_ROOT + encodeURIComponent(folder.replace(/^cl/i, '')) + '/' + possibleIcons[iconIndex++]
+            : `${encodeURIComponent(folder)}/${possibleIcons[iconIndex++]}`;
         } else {
           icon.style.display = 'none';
           fallback.style.display = 'inline-flex';
@@ -352,14 +380,14 @@
       label.textContent = titleFromFolder(folder);
 
       button.append(icon, fallback, label);
-      button.addEventListener('click', () => launchGame(folder));
+      button.addEventListener('click', () => launchGame(game));
       return button;
     };
 
     const render = () => {
       const query = search.value.trim().toLowerCase();
-      const filtered = games.filter((folder) =>
-        folder.toLowerCase().includes(query) || titleFromFolder(folder).toLowerCase().includes(query)
+      const filtered = games.filter((game) =>
+        game.id.toLowerCase().includes(query) || titleFromFolder(game.id).toLowerCase().includes(query)
       );
 
       grid.textContent = '';
@@ -374,11 +402,33 @@
       }
 
       const fragment = document.createDocumentFragment();
-      filtered.forEach((folder) => fragment.append(createGameCard(folder)));
+      filtered.forEach((game) => fragment.append(createGameCard(game)));
       grid.append(fragment);
     };
 
     search.addEventListener('input', render);
+
+    fetch(UGS_MANIFEST)
+      .then(response => {
+        if (!response.ok) throw new Error('Could not load the UGS game list');
+        return response.json();
+      })
+      .then(ids => {
+        const existing = new Set(games.map(game => game.id.toLowerCase()));
+        ids.forEach(id => {
+          const normalized = String(id);
+          if (!existing.has(normalized.toLowerCase())) {
+            games.push({ id: normalized, kind: 'ugs' });
+            existing.add(normalized.toLowerCase());
+          }
+        });
+        render();
+      })
+      .catch(error => {
+        console.warn('UGS catalog unavailable:', error);
+        render();
+      });
+
     render();
   </script>
   <script>alert('Made with 🩷 by Bensi Froymovich')</script>
