@@ -217,10 +217,7 @@
       </div>
       <div class="controls">
         <input id="search" class="search" type="search" placeholder="Search games..." autocomplete="off" />
-        <div class="toggle-container" aria-label="Launch Mode">
-          <button type="button" class="toggle-btn active" data-mode="blank">about:blank</button>
-          <button type="button" class="toggle-btn" data-mode="local">Local</button>
-        </div>
+
       </div>
     </div>
 
@@ -288,29 +285,6 @@
     const search = document.getElementById('search');
     const stats = document.getElementById('stats');
     const grid = document.getElementById('grid');
-    const toggleBtns = document.querySelectorAll('.toggle-btn');
-
-    // Handle toggle switch selection & persistence
-    toggleBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        toggleBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        localStorage.setItem('gameLaunchMode', btn.dataset.mode);
-      });
-    });
-
-    // Restore saved mode if any
-    const savedMode = localStorage.getItem('gameLaunchMode');
-    if (savedMode) {
-      toggleBtns.forEach(b => {
-        if (b.dataset.mode === savedMode) {
-          b.classList.add('active');
-        } else {
-          b.classList.remove('active');
-        }
-      });
-    }
-
     const titleFromFolder = (folder) => folder.replace(/^cl/i, '').replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
     const closeGame = () => {
