@@ -297,22 +297,22 @@
     ];
 
     const games = localGames.map(id => ({ id, kind: 'local' }));
-    const UGS_MANIFEST = './ugs-games.json';
-    const UGS_CDN_ROOT = 'https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile/UGS-Files/';
-    const player = document.getElementById('game-player');
-    const playerTitle = document.getElementById('player-title');
-    const gameFrame = document.getElementById('game-frame');
+const UGS_MANIFEST = './ugs-games.json';
+const UGS_CDN_ROOT = 'https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile/UGS-Files/';
+const player = document.getElementById('game-player');
+const playerTitle = document.getElementById('player-title');
+const gameFrame = document.getElementById('game-frame');
 
-    const search = document.getElementById('search');
-    const stats = document.getElementById('stats');
-    const grid = document.getElementById('grid');
-    // UGS IDs use a `cl` catalog prefix; keep it for CDN paths, but never show it in the UI.
-    const gameName = (game) => {
-      const name = game.kind === 'ugs' ? game.id.replace(/^cl/i, '') : game.id;
-      return name.replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-    };
+const search = document.getElementById('search');
+const stats = document.getElementById('stats');
+const grid = document.getElementById('grid');
+// UGS IDs use a `cl` catalog prefix; keep it for CDN paths, but never show it in the UI.
+const gameName = (game) => {
+  const name = game.kind === 'ugs' ? game.id.replace(/^cl/i, '') : game.id;
+  return name.replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+};
 
-    // Build the real URL for a game (same logic you already had).
+// Build the real URL for a game.
 const gameUrl = (game) => {
   if (game.kind === 'ugs') {
     const filename =
@@ -324,10 +324,66 @@ const gameUrl = (game) => {
   return new URL(`${encodeURIComponent(game.id)}/index.html`, window.location.href).href;
 };
 
-// All games just link straight out — no in-page player.
-const launchGame = (game) => {
-  window.location.href = gameUrl(game);   // same tab
-  // window.open(gameUrl(game), '_blank', 'noopener'); // ← use this if you want the hub to stay open
+// jsDelivr serves .html as text/plain, so navigating to it shows the
+// source instead of the game. Those URLs get fetched and rendered inline.
+const rendersInline = (url) => url.includes('cdn.jsdelivr.net');
+
+// Fetch the file, pin its relative paths to its own directory with
+// <base>, and return markup the iframe can actually run.
+const fetchRunnableHtml = async (url) => {
+  const res = await fetch(url, { credentials: 'omit' }); // jsDelivr sends Access-Control-Allow-Origin: *
+  if (!res.ok) throw new Error(`HTTP ${res.status} loading ${url}`);
+  let html = await res.text();
+
+  const baseTag = `<base href="${new URL('.', url).href}">`;
+  if (/<head[^>]*>/i.test(html))      html = html.replace(/<head[^>]*>/i, m => m + baseTag);
+  else if (/<html[^>]*>/i.test(html)) html = html.replace(/<html[^>]*>/i, m => m + `<head>${baseTag}</head>`);
+  else                                html = baseTag + html;
+
+  return html;
+};
+
+const openPlayer = (title) => {
+  playerTitle.textContent = title;
+  player.classList.add('open');
+  player.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+};
+
+const closeGame = () => {
+  player.classList.remove('open');
+  player.setAttribute('aria-hidden', 'true');
+  gameFrame.srcdoc = '';           // actually stops the game, not just hides it
+  gameFrame.removeAttribute('src');
+  document.body.style.overflow = '';
+};
+
+document.getElementById('close-player').addEventListener('click', closeGame);
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && player.classList.contains('open')) closeGame();
+});
+
+const launchGame = async (game) => {
+  const url = gameUrl(game);
+
+  // Anything NOT on jsDelivr navigates away exactly as before.
+  if (!rendersInline(url)) {
+    window.location.href = url;
+    return;
+  }
+
+  openPlayer(gameName(game));
+  gameFrame.removeAttribute('src');
+  gameFrame.srcdoc = `<body style="font:16px system-ui;padding:2rem;color:#eee;background:#111">Loading…</body>`;
+
+  try {
+    gameFrame.srcdoc = await fetchRunnableHtml(url);
+  } catch (err) {
+    console.error('Inline launch failed:', err);
+    gameFrame.srcdoc = `<body style="font:16px system-ui;padding:2rem;color:#eee;background:#111">
+      Couldn't load the game here.<br>
+      <a style="color:#8cf" href="${url}" target="_blank" rel="noopener">Open it directly</a></body>`;
+  }
 };
 
     const createGameCard = (game) => {
