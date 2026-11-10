@@ -312,33 +312,23 @@
       return name.replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     };
 
-    const closeGame = () => {
-      player.classList.remove('open');
-      player.setAttribute('aria-hidden', 'true');
-      gameFrame.src = 'about:blank';
-      document.body.style.overflow = '';
-    };
+    // Build the real URL for a game (same logic you already had).
+const gameUrl = (game) => {
+  if (game.kind === 'ugs') {
+    const filename =
+      game.id.includes('.') && game.id.lastIndexOf('.') > 0
+        ? game.id
+        : game.id + '.html';
+    return UGS_CDN_ROOT + encodeURIComponent(filename);
+  }
+  return new URL(`${encodeURIComponent(game.id)}/index.html`, window.location.href).href;
+};
 
-    document.getElementById('close-player').addEventListener('click', closeGame);
-    document.addEventListener('keydown', event => {
-      if (event.key === 'Escape' && player.classList.contains('open')) closeGame();
-    });
-
-    // All games share this same in-page player.
-    const launchGame = (game) => {
-      playerTitle.textContent = gameName(game);
-      player.classList.add('open');
-      player.setAttribute('aria-hidden', 'false');
-      document.body.style.overflow = 'hidden';
-      gameFrame.src = 'about:blank';
-
-      if (game.kind === 'ugs') {
-        const filename = game.id.includes('.') && game.id.lastIndexOf('.') > 0 ? game.id : game.id + '.html';
-        gameFrame.src = UGS_CDN_ROOT + encodeURIComponent(filename);
-      } else {
-        gameFrame.src = new URL(`${encodeURIComponent(game.id)}/index.html`, window.location.href).href;
-      }
-    };
+// All games just link straight out — no in-page player.
+const launchGame = (game) => {
+  window.location.href = gameUrl(game);   // same tab
+  // window.open(gameUrl(game), '_blank', 'noopener'); // ← use this if you want the hub to stay open
+};
 
     const createGameCard = (game) => {
       const folder = game.id;
