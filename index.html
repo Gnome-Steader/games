@@ -126,6 +126,8 @@
     }
 
     .game {
+      content-visibility: auto;
+      contain-intrinsic-size: 60px;
       border: 1px solid rgba(148, 163, 184, 0.25);
       border-radius: 14px;
       padding: 0.7rem;
@@ -306,6 +308,34 @@ const gameFrame = document.getElementById('game-frame');
 const search = document.getElementById('search');
 const stats = document.getElementById('stats');
 const grid = document.getElementById('grid');
+// Render a small window of cards instead of creating hundreds at once.
+const PAGE_SIZE = 48;
+let filteredGames = [];
+let renderedCount = 0;
+const loadMoreSentinel = document.createElement('div');
+loadMoreSentinel.className = 'empty';
+loadMoreSentinel.textContent = 'Scroll to load more games';
+loadMoreSentinel.style.display = 'none';
+grid.after(loadMoreSentinel);
+const pageObserver = 'IntersectionObserver' in window
+  ? new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) renderNextPage();
+    }, { rootMargin: '700px 0px' })
+  : null;
+if (pageObserver) pageObserver.observe(loadMoreSentinel);
+// Defer icon requests until cards approach the viewport.
+const iconObserver = 'IntersectionObserver' in window
+  ? new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        iconObserver.unobserve(entry.target);
+        entry.target.dataset.loadIcon?.split('|').forEach(() => {});
+        const load = iconLoaders.get(entry.target);
+        if (load) load();
+      });
+    }, { rootMargin: '350px' })
+  : null;
+const iconLoaders = new WeakMap();
 // UGS IDs use a `cl` catalog prefix; keep it for CDN paths, but never show it in the UI.
 const gameName = (game) => {
   const name = game.kind === 'ugs' ? game.id.replace(/^cl/i, '') : game.id;
@@ -418,7 +448,9 @@ const launchGame = async (game) => {
       };
 
       icon.addEventListener('error', tryNextIcon);
-      tryNextIcon();
+      iconLoaders.set(icon, tryNextIcon);
+      if (iconObserver) iconObserver.observe(icon);
+      else tryNextIcon();
 
       const label = document.createElement('span');
       label.className = 'name';
@@ -429,26 +461,38 @@ const launchGame = async (game) => {
       return button;
     };
 
+    const renderNextPage = () => {
+      if (renderedCount >= filteredGames.length) {
+        loadMoreSentinel.style.display = 'none';
+        return;
+      }
+      const end = Math.min(renderedCount + PAGE_SIZE, filteredGames.length);
+      const fragment = document.createDocumentFragment();
+      for (; renderedCount < end; renderedCount++) {
+        fragment.append(createGameCard(filteredGames[renderedCount]));
+      }
+      grid.append(fragment);
+      loadMoreSentinel.style.display = renderedCount < filteredGames.length ? 'block' : 'none';
+      loadMoreSentinel.textContent = `Showing ${renderedCount} of ${filteredGames.length} games — scroll for more`;
+    };
+
     const render = () => {
       const query = search.value.trim().toLowerCase();
-      const filtered = games.filter((game) =>
+      filteredGames = games.filter((game) =>
         game.id.toLowerCase().includes(query) || gameName(game).toLowerCase().includes(query)
       );
-
+      renderedCount = 0;
       grid.textContent = '';
-      stats.textContent = `Showing ${filtered.length} of ${games.length} games`;
-
-      if (!filtered.length) {
+      stats.textContent = `Showing ${filteredGames.length} of ${games.length} games`;
+      loadMoreSentinel.style.display = 'none';
+      if (!filteredGames.length) {
         const empty = document.createElement('div');
         empty.className = 'empty';
         empty.textContent = 'No games match your search.';
         grid.append(empty);
         return;
       }
-
-      const fragment = document.createDocumentFragment();
-      filtered.forEach((game) => fragment.append(createGameCard(game)));
-      grid.append(fragment);
+      renderNextPage();
     };
 
     search.addEventListener('input', render);
