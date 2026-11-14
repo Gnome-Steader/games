@@ -329,7 +329,6 @@ const iconObserver = 'IntersectionObserver' in window
       entries.forEach(entry => {
         if (!entry.isIntersecting) return;
         iconObserver.unobserve(entry.target);
-        entry.target.dataset.loadIcon?.split('|').forEach(() => {});
         const load = iconLoaders.get(entry.target);
         if (load) load();
       });
@@ -358,19 +357,35 @@ const gameUrl = (game) => {
 // source instead of the game. Those URLs get fetched and rendered inline.
 const rendersInline = (url) => url.includes('cdn.jsdelivr.net');
 
+// Cache downloaded game documents so reopening a game does not fetch and
+// parse the same large single-file HTML again during this visit.
+const gameHtmlCache = new Map();
+
 // Fetch the file, pin its relative paths to its own directory with
 // <base>, and return markup the iframe can actually run.
 const fetchRunnableHtml = async (url) => {
-  const res = await fetch(url, { credentials: 'omit' }); // jsDelivr sends Access-Control-Allow-Origin: *
-  if (!res.ok) throw new Error(`HTTP ${res.status} loading ${url}`);
-  let html = await res.text();
+  if (!gameHtmlCache.has(url)) {
+    const pending = (async () => {
+      const res = await fetch(url, { credentials: 'omit' }); // jsDelivr sends Access-Control-Allow-Origin: *
+      if (!res.ok) throw new Error(`HTTP ${res.status} loading ${url}`);
+      let html = await res.text();
 
-  const baseTag = `<base href="${new URL('.', url).href}">`;
-  if (/<head[^>]*>/i.test(html))      html = html.replace(/<head[^>]*>/i, m => m + baseTag);
-  else if (/<html[^>]*>/i.test(html)) html = html.replace(/<html[^>]*>/i, m => m + `<head>${baseTag}</head>`);
-  else                                html = baseTag + html;
+      const baseTag = `<base href="${new URL('.', url).href}">`;
+      if (/<head[^>]*>/i.test(html))      html = html.replace(/<head[^>]*>/i, m => m + baseTag);
+      else if (/<html[^>]*>/i.test(html)) html = html.replace(/<html[^>]*>/i, m => m + `<head>${baseTag}</head>`);
+      else                                html = baseTag + html;
 
-  return html;
+      return html;
+    })();
+    gameHtmlCache.set(url, pending);
+  }
+
+  try {
+    return await gameHtmlCache.get(url);
+  } catch (error) {
+    gameHtmlCache.delete(url); // Allow a later retry after network failures.
+    throw error;
+  }
 };
 
 const openPlayer = (title) => {
