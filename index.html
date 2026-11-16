@@ -3,252 +3,723 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Torpedo — Sinking the internet censorSHIP</title>
+  <title>Torpedo — Sinking the Internet CensorSHIP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <style>
     :root {
       color-scheme: dark;
-      --bg: #070b17;
-      --panel: rgba(17, 24, 39, 0.78);
-      --panel-border: rgba(148, 163, 184, 0.22);
-      --text: #e2e8f0;
+      --bg: #070a13;
+      --surface: rgba(15, 23, 42, 0.72);
+      --surface-hover: rgba(30, 41, 59, 0.85);
+      --surface-border: rgba(148, 163, 184, 0.14);
+      --surface-border-hover: rgba(96, 165, 250, 0.5);
+      --text: #f8fafc;
       --muted: #94a3b8;
-      --accent: #60a5fa;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.25);
       --accent-2: #818cf8;
-      --shadow: 0 20px 45px rgba(2, 6, 23, 0.55);
+      --success: #34d399;
+      --danger: #f87171;
+      --radius: 18px;
+      --shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.65);
     }
 
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      margin: 0;
       min-height: 100vh;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
       color: var(--text);
-      background:
-        radial-gradient(circle at 15% 20%, rgba(96, 165, 250, 0.28), transparent 36%),
-        radial-gradient(circle at 80% 0%, rgba(129, 140, 248, 0.24), transparent 35%),
-        var(--bg);
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(56, 189, 248, 0.15), transparent),
+        radial-gradient(ellipse 60% 40% at 90% 90%, rgba(129, 140, 248, 0.12), transparent),
+        radial-gradient(circle at 10% 70%, rgba(20, 184, 166, 0.08), transparent);
+      background-attachment: fixed;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    /* Ambient top glow */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), var(--accent-2), transparent);
+      z-index: 100;
     }
 
     .shell {
-      width: min(1100px, 94vw);
-      margin: 2.2rem auto;
-      padding: 1.35rem;
-      border-radius: 26px;
-      background: var(--panel);
-      border: 1px solid var(--panel-border);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(14px);
+      width: min(1200px, 94vw);
+      margin: 2rem auto 4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.8rem;
     }
 
-    .header {
+    /* Header & Branding */
+    .hero {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 28px;
+      padding: 2.2rem 2.4rem;
+      backdrop-filter: blur(20px);
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.8rem;
+    }
+
+    .brand h1 {
+      font-size: clamp(2rem, 3.5vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: linear-gradient(135deg, #ffffff 40%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand .tagline {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .brand .desc {
+      margin-top: 0.35rem;
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    .quick-actions {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1.1rem;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 600;
+      border: 1px solid var(--surface-border);
+      background: rgba(15, 23, 42, 0.6);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      user-select: none;
+    }
+
+    .btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--surface-border-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-accent {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border: none;
+      color: #040915;
+      font-weight: 700;
+    }
+
+    .btn-accent:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 4px 18px var(--accent-glow);
+    }
+
+    /* Search & Filter Toolbar */
+    .toolbar {
       display: flex;
       gap: 1rem;
-      justify-content: space-between;
-      align-items: end;
       flex-wrap: wrap;
-      margin-bottom: 1.2rem;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(1.45rem, 2vw, 2rem);
-      letter-spacing: 0.01em;
-    }
-
-    .sub {
-      margin: 0.35rem 0 0;
-      color: var(--muted);
-      font-size: 0.96rem;
-    }
-
-    .controls {
-      display: flex;
-      gap: 0.75rem;
       align-items: center;
-      flex-wrap: wrap;
+      justify-content: space-between;
+      border-top: 1px solid var(--surface-border);
+      padding-top: 1.5rem;
     }
 
-    .search {
-      width: min(260px, 100%);
-      border: 1px solid rgba(148, 163, 184, 0.32);
+    .search-box {
+      position: relative;
+      flex: 1;
+      min-width: 260px;
+      max-width: 480px;
+    }
+
+    .search-box svg {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.75rem 2.4rem 0.75rem 2.6rem;
       border-radius: 14px;
-      background: rgba(15, 23, 42, 0.75);
+      background: rgba(10, 15, 30, 0.7);
+      border: 1px solid var(--surface-border);
       color: var(--text);
-      font: inherit;
-      padding: 0.78rem 0.92rem;
+      font-family: inherit;
+      font-size: 0.92rem;
       outline: none;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      transition: all 0.2s ease;
     }
 
-    .search:focus {
+    .search-input:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.18);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+      background: rgba(10, 15, 30, 0.95);
     }
 
-    .toggle-container {
-      display: flex;
-      background: rgba(15, 23, 42, 0.75);
-      border: 1px solid rgba(148, 163, 184, 0.32);
-      border-radius: 14px;
-      padding: 0.25rem;
-      gap: 0.25rem;
-    }
-
-    .toggle-btn {
-      background: transparent;
+    .clear-search {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
       border: none;
       color: var(--muted);
-      font: inherit;
-      font-size: 0.85rem;
-      padding: 0.6rem 0.85rem;
+      cursor: pointer;
+      font-size: 1rem;
+      display: none;
+    }
+
+    .filter-tabs {
+      display: flex;
+      background: rgba(10, 15, 30, 0.7);
+      padding: 4px;
+      border-radius: 14px;
+      border: 1px solid var(--surface-border);
+      gap: 4px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      padding: 0.55rem 0.95rem;
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--muted);
       border-radius: 10px;
       cursor: pointer;
-      transition: background 0.2s, color 0.2s;
+      transition: all 0.2s;
     }
 
-    .toggle-btn.active {
-      background: var(--accent);
-      color: #0f172a;
-      font-weight: 600;
+    .tab-btn.active {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
 
-    .stats {
-      margin: 0.2rem 0 1rem;
+    /* Stats bar */
+    .catalog-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 0.5rem;
+      font-size: 0.88rem;
       color: var(--muted);
-      font-size: 0.92rem;
     }
 
+    .catalog-meta strong {
+      color: var(--text);
+    }
+
+    /* Game Grid */
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 0.82rem;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1rem;
     }
 
-    .game {
-      content-visibility: auto;
-      contain-intrinsic-size: 60px;
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      border-radius: 14px;
-      padding: 0.7rem;
-      background: rgba(15, 23, 42, 0.76);
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius);
+      padding: 0.85rem;
       display: flex;
       align-items: center;
-      gap: 0.72rem;
-      color: var(--text);
+      gap: 0.85rem;
       cursor: pointer;
-      transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+      position: relative;
+      transition: all 0.22s cubic-bezier(0.2, 0, 0.1, 1);
+      user-select: none;
       text-align: left;
     }
 
-    .game:hover {
-      transform: translateY(-2px);
-      border-color: rgba(96, 165, 250, 0.82);
-      background: rgba(30, 41, 59, 0.92);
+    .card:hover {
+      transform: translateY(-3px);
+      background: var(--surface-hover);
+      border-color: var(--surface-border-hover);
+      box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.6);
     }
 
-    .game:focus-visible {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
-    }
-
-    .icon,
-    .fallback {
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
-      flex: 0 0 38px;
+    .thumb {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      flex-shrink: 0;
       object-fit: cover;
-    }
-
-    .icon {
-      border: 1px solid rgba(148, 163, 184, 0.3);
       background: #0f172a;
-    }
-
-    .fallback {
-      display: none;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      color: #fff;
+      overflow: hidden;
       font-weight: 700;
-      font-size: 0.95rem;
-      text-transform: uppercase;
+      font-size: 1.1rem;
+      color: #fff;
     }
 
-    .name {
+    .thumb-glyph {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(129, 140, 248, 0.35));
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--accent);
+    }
+
+    .card-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .card-title {
+      font-size: 0.94rem;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: 0.93rem;
-      line-height: 1.2;
     }
 
-    #game-player{position:fixed;inset:0;z-index:50;display:none;flex-direction:column;background:#070b14}
-    #game-player.open{display:flex}
-    .player-bar{height:54px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 14px;background:#111827;border-bottom:1px solid var(--panel-border)}
-    #player-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
-    #close-player{border:1px solid rgba(148,163,184,.35);border-radius:10px;padding:.55rem .85rem;color:var(--text);background:#263b5d;cursor:pointer;font:inherit}
-    #game-frame{display:block;width:100%;flex:1;border:0;background:#fff}
-    @media(max-width:600px){.player-bar{height:50px}}
-    .tool-panel{margin-top:28px;padding:20px;border:1px solid var(--panel-border);border-radius:18px;background:rgba(15,23,42,.72);box-shadow:var(--shadow)}
-    .tool-panel h2{margin:0 0 7px;font-size:1.2rem}
-    .tool-panel p{color:var(--muted);font-size:.9rem;line-height:1.5;margin:0 0 12px}
-    .proxy-form{display:flex;gap:10px;flex-wrap:wrap}
-    .proxy-form input{flex:1;min-width:220px;border:1px solid rgba(148,163,184,.32);border-radius:12px;background:rgba(7,11,23,.85);color:var(--text);font:inherit;padding:12px 14px}
-    .proxy-form button{border:0;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#081225;font-weight:800;padding:12px 16px;cursor:pointer}
-    .proxy-form button:hover{filter:brightness(1.1)}
-    .proxy-password{display:inline-block;border:1px solid #a78bfa55;background:#8b5cf622;color:#ddd6fe;border-radius:9px;padding:7px 10px;font-size:13px;margin:0 0 12px}
-    #proxy-status{min-height:18px;margin-top:10px}
-    .empty {
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      margin-top: 0.25rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-local {
+      background: rgba(52, 211, 153, 0.14);
+      color: var(--success);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+
+    .badge-ugs {
+      background: rgba(129, 140, 248, 0.14);
+      color: var(--accent-2);
+      border: 1px solid rgba(129, 140, 248, 0.3);
+    }
+
+    .star-btn {
+      background: none;
+      border: none;
+      color: rgba(148, 163, 184, 0.35);
+      font-size: 1.15rem;
+      padding: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      line-height: 1;
+    }
+
+    .star-btn:hover {
+      color: #fbbf24;
+      transform: scale(1.15);
+    }
+
+    .star-btn.starred {
+      color: #fbbf24;
+    }
+
+    /* Sentinel / Infinite Scroll / Empty states */
+    .scroll-loader {
+      text-align: center;
+      padding: 1.8rem;
+      border-radius: var(--radius);
+      background: var(--surface);
+      border: 1px dashed var(--surface-border);
+      color: var(--muted);
+      margin-top: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .empty-state {
       grid-column: 1 / -1;
-      border: 1px dashed rgba(148, 163, 184, 0.4);
-      border-radius: 14px;
-      padding: 1.2rem;
+      padding: 3.5rem 1rem;
       text-align: center;
       color: var(--muted);
-      background: rgba(15, 23, 42, 0.5);
+      background: var(--surface);
+      border-radius: 20px;
+      border: 1px dashed var(--surface-border);
+    }
+
+    /* Fullscreen Game Player Modal */
+    #game-player {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      background: #000;
+      animation: fadeIn 0.15s ease-out;
+    }
+
+    #game-player.open {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .player-header {
+      height: 56px;
+      background: rgba(11, 17, 32, 0.94);
+      border-bottom: 1px solid var(--surface-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.2rem;
+      gap: 1rem;
+      backdrop-filter: blur(12px);
+      z-index: 10;
+    }
+
+    .player-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      min-width: 0;
+    }
+
+    #player-title {
+      font-weight: 700;
+      font-size: 1.05rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #fff;
+    }
+
+    .player-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .player-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text);
+      padding: 0.45rem 0.85rem;
+      border-radius: 9px;
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.15s ease;
+    }
+
+    .player-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .player-btn-close {
+      background: rgba(248, 113, 113, 0.18);
+      border-color: rgba(248, 113, 113, 0.35);
+      color: #fca5a5;
+    }
+
+    .player-btn-close:hover {
+      background: rgba(248, 113, 113, 0.32);
+      color: #fff;
+    }
+
+    .iframe-wrapper {
+      flex: 1;
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: #000;
+    }
+
+    #game-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+      background: #000;
+    }
+
+    .player-loader {
+      position: absolute;
+      inset: 0;
+      background: #090e1a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.2rem;
+      z-index: 5;
+      transition: opacity 0.3s ease;
+    }
+
+    .player-loader.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .spinner {
+      width: 44px;
+      height: 44px;
+      border: 3px solid rgba(56, 189, 248, 0.2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Web Proxy Section */
+    .tool-panel {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 24px;
+      padding: 1.8rem 2.2rem;
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow);
+    }
+
+    .tool-panel h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .tool-panel p {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .proxy-box {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .proxy-input {
+      flex: 1;
+      min-width: 260px;
+      padding: 0.85rem 1.1rem;
+      border-radius: 12px;
+      background: rgba(10, 15, 30, 0.8);
+      border: 1px solid var(--surface-border);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.92rem;
+      outline: none;
+    }
+
+    .proxy-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .pass-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      color: #c4b5fd;
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+
+    .pass-tag code {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    #proxy-status {
+      font-size: 0.86rem;
+      min-height: 1.2rem;
     }
   </style>
 </head>
 <body>
-  <section id="game-player" aria-hidden="true">
-    <div class="player-bar"><span id="player-title">Loading game…</span><button id="close-player" type="button">Close game ✕</button></div>
-    <iframe id="game-frame" title="Game player" allow="autoplay; fullscreen; gamepad; clipboard-read; clipboard-write" allowfullscreen></iframe>
-  </section>
-  <main class="shell">
-    <div class="header">
-      <div>
-        <h1>TORPEDO</h1>
-        <p class="sub" style="letter-spacing:.08em;text-transform:uppercase">Sinking the internet censorSHIP</p>
-        <p class="sub">Games and web tools. All in one place.</p>
-        
-      </div>
-      <div class="controls">
-        <input id="search" class="search" type="search" placeholder="Search games..." autocomplete="off" />
 
+  <!-- Fullscreen In-Page Game Player -->
+  <section id="game-player" aria-hidden="true" role="dialog" aria-modal="true">
+    <header class="player-header">
+      <div class="player-title-wrap">
+        <span id="player-badge" class="badge badge-local">Game</span>
+        <h2 id="player-title">Loading...</h2>
       </div>
+      <div class="player-controls">
+        <button id="btn-reload" class="player-btn" type="button" title="Reload game">↻ Reload</button>
+        <button id="btn-fullscreen" class="player-btn" type="button" title="Toggle Fullscreen">⛶ Fullscreen</button>
+        <button id="btn-popout" class="player-btn" type="button" title="Open in separate window">↗ Popout</button>
+        <button id="close-player" class="player-btn player-btn-close" type="button" title="Close (Esc)">✕ Close</button>
+      </div>
+    </header>
+    <div class="iframe-wrapper">
+      <div id="player-loader" class="player-loader">
+        <div class="spinner"></div>
+        <p id="player-loader-text" style="color:var(--muted);font-size:0.92rem">Fetching game package...</p>
+      </div>
+      <iframe 
+        id="game-frame" 
+        title="Game Player"
+        allow="autoplay; fullscreen; gamepad; clipboard-read; clipboard-write; microphone; camera; focus-without-user-activation" 
+        allowfullscreen>
+      </iframe>
+    </div>
+  </section>
+
+  <!-- Main Portal Shell -->
+  <main class="shell">
+    
+    <header class="hero">
+      <div class="hero-top">
+        <div class="brand">
+          <h1>⚡ TORPEDO</h1>
+          <p class="tagline">Sinking the internet censorSHIP</p>
+          <p class="desc">A fast, self-contained library of local games, UGS single-files, and stealth proxy utilities.</p>
+        </div>
+        <div class="quick-actions">
+          <button id="btn-random" class="btn" type="button">🎲 Random Game</button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input id="search" class="search-input" type="search" placeholder="Search by name, ID, or tag... (Press / to search)" autocomplete="off" />
+          <button id="clear-search" class="clear-search" title="Clear">✕</button>
+        </div>
+
+        <div class="filter-tabs" role="tablist">
+          <button class="tab-btn active" data-filter="all">All</button>
+          <button class="tab-btn" data-filter="local">Local</button>
+          <button class="tab-btn" data-filter="ugs">Cloud (UGS)</button>
+          <button class="tab-btn" data-filter="favorites">★ Favorites</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="catalog-meta">
+      <span id="stats">Indexing library...</span>
+      <span id="active-filter-label" style="font-size:0.8rem;text-transform:uppercase;letter-spacing:.05em">Showing all games</span>
     </div>
 
-    <p class="stats" id="stats"></p>
+    <!-- Games Grid -->
     <section class="grid" id="grid" aria-live="polite"></section>
 
+    <!-- Scroll Sentinel & Manual Trigger -->
+    <div id="scroll-sentinel" class="scroll-loader" style="display: none;">
+      <span id="sentinel-text">Loading more games...</span>
+      <button id="btn-load-more" class="btn btn-accent" type="button" style="padding:0.5rem 1rem;font-size:0.82rem;">Load Next Batch</button>
+    </div>
+
+    <!-- Integrated Web Proxy Panel -->
     <section class="tool-panel" aria-labelledby="proxy-heading">
-      <h2 id="proxy-heading">Web Proxy</h2>
-      <p>Open a website through the Torpedo Cloudflare Worker.</p>
-      <div class="proxy-password"><strong>Worker password:</strong> <code>123</code></div>
-      <form class="proxy-form" id="proxy-form">
-        <input id="proxy-target" type="url" inputmode="url" placeholder="https://example.com" required aria-label="Website URL">
-        <button type="submit">Open through proxy ↗</button>
+      <h2 id="proxy-heading">🛡️ Web Proxy Gateway</h2>
+      <p>Bypass local firewalls and access web destinations through the secure Torpedo Cloudflare Worker.</p>
+      
+      <div class="proxy-box">
+        <div class="pass-tag" id="copy-pass-btn" title="Click to copy password">
+          <strong>Worker Password:</strong> <code>123</code> <span style="font-size:0.75rem">(click to copy)</span>
+        </div>
+      </div>
+
+      <form class="proxy-box" id="proxy-form">
+        <input id="proxy-target" class="proxy-input" type="url" inputmode="url" placeholder="https://example.com" required aria-label="Website URL">
+        <button class="btn btn-accent" type="submit">Launch via Proxy ↗</button>
       </form>
-      <p id="proxy-status" role="status"></p>
-      <p>Only HTTP and HTTPS URLs are accepted. If the Worker requests authentication, enter the password shown above.</p>
+      <p id="proxy-status" role="status" style="color:var(--muted);margin:0;"></p>
     </section>
+
   </main>
 
   <script>
+    // -------------------------------------------------------------------------
+    // Local Game Catalog
+    // -------------------------------------------------------------------------
     const localGames = [
       "1", "10-minutes-till-dawn", "100ng", "1v1lol", "1v1space", "2048", "2048-multitask", "9007199254740992",
       "DogeMiner", "HexGL", "OfflineParadise", "Stickman-Survival", "a-dance-of-fire-and-ice", "achievementunlocked",
@@ -298,260 +769,520 @@
       "you-are-bezos"
     ];
 
-    const games = localGames.map(id => ({ id, kind: 'local' }));
-const UGS_MANIFEST = './ugs-games.json';
-const UGS_CDN_ROOT = 'https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile/UGS-Files/';
-const player = document.getElementById('game-player');
-const playerTitle = document.getElementById('player-title');
-const gameFrame = document.getElementById('game-frame');
+    // Master game list
+    let games = localGames.map(id => ({ id, kind: 'local' }));
 
-const search = document.getElementById('search');
-const stats = document.getElementById('stats');
-const grid = document.getElementById('grid');
-// Render a small window of cards instead of creating hundreds at once.
-const PAGE_SIZE = 48;
-let filteredGames = [];
-let renderedCount = 0;
-const loadMoreSentinel = document.createElement('div');
-loadMoreSentinel.className = 'empty';
-loadMoreSentinel.textContent = 'Scroll to load more games';
-loadMoreSentinel.style.display = 'none';
-grid.after(loadMoreSentinel);
-const pageObserver = 'IntersectionObserver' in window
-  ? new IntersectionObserver(entries => {
-      if (entries.some(entry => entry.isIntersecting)) renderNextPage();
-    }, { rootMargin: '700px 0px' })
-  : null;
-if (pageObserver) pageObserver.observe(loadMoreSentinel);
-// Defer icon requests until cards approach the viewport.
-const iconObserver = 'IntersectionObserver' in window
-  ? new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        iconObserver.unobserve(entry.target);
-        const load = iconLoaders.get(entry.target);
-        if (load) load();
-      });
-    }, { rootMargin: '350px' })
-  : null;
-const iconLoaders = new WeakMap();
-// UGS IDs use a `cl` catalog prefix; keep it for CDN paths, but never show it in the UI.
-const gameName = (game) => {
-  const name = game.kind === 'ugs' ? game.id.replace(/^cl/i, '') : game.id;
-  return name.replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-};
+    // Storage for favorites
+    let favorites = new Set(JSON.parse(localStorage.getItem('torpedo_favs') || '[]'));
 
-// Build the real URL for a game.
-const gameUrl = (game) => {
-  if (game.kind === 'ugs') {
-    const filename =
-      game.id.includes('.') && game.id.lastIndexOf('.') > 0
-        ? game.id
-        : game.id + '.html';
-    return UGS_CDN_ROOT + encodeURIComponent(filename);
-  }
-  return new URL(`${encodeURIComponent(game.id)}/index.html`, window.location.href).href;
-};
+    const saveFavorites = () => {
+      localStorage.setItem('torpedo_favs', JSON.stringify([...favorites]));
+    };
 
-// jsDelivr serves .html as text/plain, so navigating to it shows the
-// source instead of the game. Those URLs get fetched and rendered inline.
-const rendersInline = (url) => url.includes('cdn.jsdelivr.net');
+    // -------------------------------------------------------------------------
+    // UGS CDN Multi-Mirror Endpoints & Fallback System
+    // -------------------------------------------------------------------------
+    const UGS_MANIFEST = './ugs-games.json';
+    const UGS_MIRRORS = [
+      'https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile@main/UGS-Files/',
+      'https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile@main/',
+      'https://cdn.jsdelivr.net/gh/bubbls/ugs-files@main/',
+      'https://raw.githubusercontent.com/bubbls/ugs-singlefile/main/UGS-Files/',
+      'https://raw.githubusercontent.com/bubbls/ugs-singlefile/main/'
+    ];
 
-// Cache downloaded game documents so reopening a game does not fetch and
-// parse the same large single-file HTML again during this visit.
-const gameHtmlCache = new Map();
+    // Formats title cleanly from ID
+    const gameName = (game) => {
+      let raw = game.kind === 'ugs' ? game.id.replace(/^cl/i, '') : game.id;
+      raw = raw.replace(/\.html$/i, '');
+      return raw.replace(/[-_.]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    };
 
-// Fetch the file, pin its relative paths to its own directory with
-// <base>, and return markup the iframe can actually run.
-const fetchRunnableHtml = async (url) => {
-  if (!gameHtmlCache.has(url)) {
-    const pending = (async () => {
-      const res = await fetch(url, { credentials: 'omit' }); // jsDelivr sends Access-Control-Allow-Origin: *
-      if (!res.ok) throw new Error(`HTTP ${res.status} loading ${url}`);
-      let html = await res.text();
+    // -------------------------------------------------------------------------
+    // Player Engine & State
+    // -------------------------------------------------------------------------
+    const player = document.getElementById('game-player');
+    const playerTitle = document.getElementById('player-title');
+    const playerBadge = document.getElementById('player-badge');
+    const gameFrame = document.getElementById('game-frame');
+    const playerLoader = document.getElementById('player-loader');
+    const playerLoaderText = document.getElementById('player-loader-text');
+    let currentGame = null;
+    let currentGameUrl = '';
 
-      const baseTag = `<base href="${new URL('.', url).href}">`;
-      if (/<head[^>]*>/i.test(html))      html = html.replace(/<head[^>]*>/i, m => m + baseTag);
-      else if (/<html[^>]*>/i.test(html)) html = html.replace(/<html[^>]*>/i, m => m + `<head>${baseTag}</head>`);
-      else                                html = baseTag + html;
+    const openPlayerModal = (title, badgeText, badgeClass) => {
+      playerTitle.textContent = title;
+      playerBadge.textContent = badgeText;
+      playerBadge.className = `badge ${badgeClass}`;
+      playerLoader.classList.remove('hidden');
+      player.classList.add('open');
+      player.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    };
 
-      return html;
-    })();
-    gameHtmlCache.set(url, pending);
-  }
+    const closePlayerModal = () => {
+      player.classList.remove('open');
+      player.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      gameFrame.src = 'about:blank';
+      gameFrame.removeAttribute('srcdoc');
+      currentGame = null;
+      currentGameUrl = '';
+    };
 
-  try {
-    return await gameHtmlCache.get(url);
-  } catch (error) {
-    gameHtmlCache.delete(url); // Allow a later retry after network failures.
-    throw error;
-  }
-};
+    document.getElementById('close-player').addEventListener('click', closePlayerModal);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && player.classList.contains('open')) {
+        closePlayerModal();
+      }
+      if (e.key === '/' && document.activeElement !== search && !player.classList.contains('open')) {
+        e.preventDefault();
+        search.focus();
+      }
+    });
 
-const openPlayer = (title) => {
-  playerTitle.textContent = title;
-  player.classList.add('open');
-  player.setAttribute('aria-hidden', 'false');
-  document.body.style.overflow = 'hidden';
-};
+    // Fullscreen Support
+    document.getElementById('btn-fullscreen').addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        player.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    });
 
-const closeGame = () => {
-  player.classList.remove('open');
-  player.setAttribute('aria-hidden', 'true');
-  gameFrame.srcdoc = '';           // actually stops the game, not just hides it
-  gameFrame.removeAttribute('src');
-  document.body.style.overflow = '';
-};
+    // Reload active game
+    document.getElementById('btn-reload').addEventListener('click', () => {
+      if (currentGame) launchGame(currentGame);
+    });
 
-document.getElementById('close-player').addEventListener('click', closeGame);
-document.addEventListener('keydown', event => {
-  if (event.key === 'Escape' && player.classList.contains('open')) closeGame();
-});
+    // Popout to new tab
+    document.getElementById('btn-popout').addEventListener('click', () => {
+      if (currentGameUrl) {
+        window.open(currentGameUrl, '_blank', 'noopener,noreferrer');
+      } else if (currentGame) {
+        const localUrl = new URL(`${encodeURIComponent(currentGame.id)}/index.html`, window.location.href).href;
+        window.open(localUrl, '_blank', 'noopener,noreferrer');
+      }
+    });
 
-const launchGame = async (game) => {
-  const url = gameUrl(game);
+    // HTML Cache for fast re-launches
+    const htmlCache = new Map();
 
-  // Anything NOT on jsDelivr navigates away exactly as before.
-  if (!rendersInline(url)) {
-    window.location.href = url;
-    return;
-  }
+    // Resolves UGS games across multiple repo configurations
+    const fetchUgsGameSource = async (gameId) => {
+      const stripped = gameId.replace(/^cl/i, '').replace(/\.html$/i, '');
+      const candidates = [
+        gameId.endsWith('.html') ? gameId : `${gameId}.html`,
+        `cl${stripped}.html`,
+        `${stripped}.html`
+      ];
 
-  openPlayer(gameName(game));
-  gameFrame.removeAttribute('src');
-  gameFrame.srcdoc = `<body style="font:16px system-ui;padding:2rem;color:#eee;background:#111">Loading…</body>`;
+      // Dedup candidates
+      const fileVariants = [...new Set(candidates)];
 
-  try {
-    gameFrame.srcdoc = await fetchRunnableHtml(url);
-  } catch (err) {
-    console.error('Inline launch failed:', err);
-    gameFrame.srcdoc = `<body style="font:16px system-ui;padding:2rem;color:#eee;background:#111">
-      Couldn't load the game here.<br>
-      <a style="color:#8cf" href="${url}" target="_blank" rel="noopener">Open it directly</a></body>`;
-  }
-};
-
-    const createGameCard = (game) => {
-      const folder = game.id;
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'game';
-      button.setAttribute('aria-label', `Launch ${gameName(game)}`);
-
-      const icon = document.createElement('img');
-      icon.className = 'icon';
-      icon.alt = '';
-      icon.loading = 'lazy';
-
-      const fallback = document.createElement('span');
-      fallback.className = 'fallback';
-      fallback.textContent = gameName(game).charAt(0) || '?';
-
-      // Try multiple common icon filenames sequentially
-      const possibleIcons = ['icon.png', 'logo.png', 'thumb.png', 'thumbnail.png', 'image.png'];
-      let iconIndex = 0;
-
-      const tryNextIcon = () => {
-        if (iconIndex < possibleIcons.length) {
-          icon.src = game.kind === 'ugs'
-            ? UGS_CDN_ROOT + encodeURIComponent(folder.replace(/^cl/i, '')) + '/' + possibleIcons[iconIndex++]
-            : `${encodeURIComponent(folder)}/${possibleIcons[iconIndex++]}`;
-        } else {
-          icon.style.display = 'none';
-          fallback.style.display = 'inline-flex';
+      for (const mirror of UGS_MIRRORS) {
+        for (const filename of fileVariants) {
+          const testUrl = mirror + encodeURIComponent(filename);
+          if (htmlCache.has(testUrl)) {
+            return { html: htmlCache.get(testUrl), url: testUrl };
+          }
+          try {
+            const res = await fetch(testUrl, { cache: 'force-cache' });
+            if (res.ok) {
+              const text = await res.text();
+              // Verify content is genuine HTML
+              if (text.length > 80 && (text.includes('<html') || text.includes('<!DOCTYPE') || text.includes('<script') || text.includes('<body'))) {
+                htmlCache.set(testUrl, text);
+                return { html: text, url: testUrl };
+              }
+            }
+          } catch (_) {
+            // Check next candidate
+          }
         }
-      };
-
-      icon.addEventListener('error', tryNextIcon);
-      iconLoaders.set(icon, tryNextIcon);
-      if (iconObserver) iconObserver.observe(icon);
-      else tryNextIcon();
-
-      const label = document.createElement('span');
-      label.className = 'name';
-      label.textContent = gameName(game);
-
-      button.append(icon, fallback, label);
-      button.addEventListener('click', () => launchGame(game));
-      return button;
+      }
+      throw new Error(`Unable to fetch ${gameId} from any UGS mirror.`);
     };
 
-    const renderNextPage = () => {
+    // Injects code directly into iframe preserving storage origin
+    const injectHtmlIntoFrame = (iframe, html, sourceUrl) => {
+      const baseTag = `<base href="${new URL('.', sourceUrl).href}">`;
+      let sanitized = html;
+      
+      if (!/<base\s/i.test(sanitized)) {
+        if (/<head[^>]*>/i.test(sanitized)) {
+          sanitized = sanitized.replace(/<head[^>]*>/i, m => `${m}\n${baseTag}`);
+        } else if (/<html[^>]*>/i.test(sanitized)) {
+          sanitized = sanitized.replace(/<html[^>]*>/i, m => `${m}<head>${baseTag}</head>`);
+        } else {
+          sanitized = baseTag + sanitized;
+        }
+      }
+
+      try {
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(sanitized);
+        doc.close();
+      } catch (e) {
+        iframe.srcdoc = sanitized;
+      }
+    };
+
+    // Unified launcher: ALL games play in the overlay
+    const launchGame = async (game) => {
+      currentGame = game;
+      const title = gameName(game);
+
+      if (game.kind === 'local') {
+        const localPath = `${encodeURIComponent(game.id)}/index.html`;
+        currentGameUrl = new URL(localPath, window.location.href).href;
+        openPlayerModal(title, 'Local', 'badge-local');
+        playerLoaderText.textContent = 'Launching local engine...';
+        
+        gameFrame.onload = () => {
+          playerLoader.classList.add('hidden');
+        };
+        gameFrame.src = localPath;
+        return;
+      }
+
+      // UGS Cloud game
+      openPlayerModal(title, 'UGS Cloud', 'badge-ugs');
+      playerLoaderText.textContent = 'Streaming game package from UGS CDN...';
+      gameFrame.src = 'about:blank';
+
+      try {
+        const { html, url } = await fetchUgsGameSource(game.id);
+        currentGameUrl = url;
+        injectHtmlIntoFrame(gameFrame, html, url);
+        // Small delay to let browser parse scripts
+        setTimeout(() => {
+          playerLoader.classList.add('hidden');
+        }, 350);
+      } catch (err) {
+        console.error(err);
+        playerLoader.classList.add('hidden');
+        const doc = gameFrame.contentWindow.document;
+        doc.open();
+        doc.write(`
+          <body style="font-family:system-ui;background:#090d16;color:#e2e8f0;display:flex;flex-direction:column;align-items:center;justify-content:center;height:90vh;text-align:center;padding:1rem;">
+            <div style="max-width:440px;background:#131c31;padding:2rem;border-radius:18px;border:1px solid rgba(248,113,113,0.3)">
+              <h3 style="color:#f87171;margin-bottom:0.5rem">Failed to load game</h3>
+              <p style="color:#94a3b8;font-size:0.9rem;margin-bottom:1.2rem">${err.message}</p>
+              <button onclick="window.parent.document.getElementById('btn-reload').click()" style="padding:0.6rem 1.2rem;background:#38bdf8;border:none;border-radius:10px;font-weight:700;cursor:pointer">Retry Download</button>
+            </div>
+          </body>
+        `);
+        doc.close();
+      }
+    };
+
+    // -------------------------------------------------------------------------
+    // Rendering, Filtering & Infinite Pagination
+    // -------------------------------------------------------------------------
+    const PAGE_SIZE = 64;
+    let filteredGames = [];
+    let renderedCount = 0;
+    let currentFilter = 'all';
+
+    const search = document.getElementById('search');
+    const clearSearch = document.getElementById('clear-search');
+    const stats = document.getElementById('stats');
+    const grid = document.getElementById('grid');
+    const sentinel = document.getElementById('scroll-sentinel');
+    const sentinelText = document.getElementById('sentinel-text');
+    const btnLoadMore = document.getElementById('btn-load-more');
+    const filterTabs = document.querySelectorAll('.tab-btn');
+    const activeFilterLabel = document.getElementById('active-filter-label');
+
+    // Generates card element
+    const createCard = (game) => {
+      const card = document.createElement('article');
+      card.className = 'card';
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', `Play ${gameName(game)}`);
+
+      // Thumb / Avatar
+      const thumb = document.createElement('div');
+      thumb.className = 'thumb';
+
+      if (game.kind === 'local') {
+        const img = document.createElement('img');
+        img.className = 'thumb';
+        img.alt = '';
+        img.loading = 'lazy';
+        img.src = `${encodeURIComponent(game.id)}/icon.png`;
+        img.onerror = () => {
+          img.replaceWith(thumb);
+          thumb.className = 'thumb thumb-glyph';
+          thumb.textContent = gameName(game).charAt(0) || '★';
+        };
+        thumb.replaceWith(img);
+      } else {
+        // UGS games use an immediate stylish glyph to avoid 404 flooding
+        thumb.className = 'thumb thumb-glyph';
+        thumb.textContent = gameName(game).charAt(0) || '⚡';
+      }
+
+      // Metadata
+      const info = document.createElement('div');
+      info.className = 'card-info';
+
+      const title = document.createElement('h3');
+      title.className = 'card-title';
+      title.textContent = gameName(game);
+
+      const meta = document.createElement('div');
+      meta.className = 'card-meta';
+
+      const badge = document.createElement('span');
+      badge.className = `badge ${game.kind === 'local' ? 'badge-local' : 'badge-ugs'}`;
+      badge.textContent = game.kind === 'local' ? 'Local' : 'Cloud';
+
+      meta.append(badge);
+      info.append(title, meta);
+
+      // Star / Favorite button
+      const star = document.createElement('button');
+      star.className = `star-btn ${favorites.has(game.id) ? 'starred' : ''}`;
+      star.innerHTML = favorites.has(game.id) ? '★' : '☆';
+      star.title = 'Add to favorites';
+      star.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (favorites.has(game.id)) {
+          favorites.delete(game.id);
+          star.classList.remove('starred');
+          star.innerHTML = '☆';
+        } else {
+          favorites.add(game.id);
+          star.classList.add('starred');
+          star.innerHTML = '★';
+        }
+        saveFavorites();
+        if (currentFilter === 'favorites') renderList();
+      });
+
+      card.append(thumb, info, star);
+
+      // Launch triggers
+      card.addEventListener('click', () => launchGame(game));
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          launchGame(game);
+        }
+      });
+
+      return card;
+    };
+
+    const renderNextBatch = () => {
       if (renderedCount >= filteredGames.length) {
-        loadMoreSentinel.style.display = 'none';
+        sentinel.style.display = 'none';
         return;
       }
-      const end = Math.min(renderedCount + PAGE_SIZE, filteredGames.length);
-      const fragment = document.createDocumentFragment();
-      for (; renderedCount < end; renderedCount++) {
-        fragment.append(createGameCard(filteredGames[renderedCount]));
+      const nextBatch = Math.min(renderedCount + PAGE_SIZE, filteredGames.length);
+      const frag = document.createDocumentFragment();
+      for (; renderedCount < nextBatch; renderedCount++) {
+        frag.append(createCard(filteredGames[renderedCount]));
       }
-      grid.append(fragment);
-      loadMoreSentinel.style.display = renderedCount < filteredGames.length ? 'block' : 'none';
-      loadMoreSentinel.textContent = `Showing ${renderedCount} of ${filteredGames.length} games — scroll for more`;
+      grid.append(frag);
+
+      if (renderedCount < filteredGames.length) {
+        sentinel.style.display = 'flex';
+        sentinelText.textContent = `Showing ${renderedCount} of ${filteredGames.length} games. Scroll or click to load more.`;
+      } else {
+        sentinel.style.display = 'none';
+      }
     };
 
-    const render = () => {
-      const query = search.value.trim().toLowerCase();
-      filteredGames = games.filter((game) =>
-        game.id.toLowerCase().includes(query) || gameName(game).toLowerCase().includes(query)
-      );
-      renderedCount = 0;
+    const renderList = () => {
+      const q = search.value.trim().toLowerCase();
+      clearSearch.style.display = q ? 'block' : 'none';
+
+      filteredGames = games.filter(g => {
+        const matchesQuery = !q || g.id.toLowerCase().includes(q) || gameName(g).toLowerCase().includes(q);
+        if (!matchesQuery) return false;
+
+        if (currentFilter === 'local') return g.kind === 'local';
+        if (currentFilter === 'ugs') return g.kind === 'ugs';
+        if (currentFilter === 'favorites') return favorites.has(g.id);
+        return true;
+      });
+
       grid.textContent = '';
-      stats.textContent = `Showing ${filteredGames.length} of ${games.length} games`;
-      loadMoreSentinel.style.display = 'none';
+      renderedCount = 0;
+      stats.innerHTML = `Showing <strong>${filteredGames.length}</strong> of ${games.length} total titles`;
+
       if (!filteredGames.length) {
-        const empty = document.createElement('div');
-        empty.className = 'empty';
-        empty.textContent = 'No games match your search.';
-        grid.append(empty);
+        sentinel.style.display = 'none';
+        grid.innerHTML = `
+          <div class="empty-state">
+            <h3 style="color:#fff;margin-bottom:0.4rem">No games found</h3>
+            <p>Try searching for a different keyword or resetting your filter.</p>
+          </div>
+        `;
         return;
       }
-      renderNextPage();
+
+      renderNextBatch();
     };
 
-    search.addEventListener('input', render);
+    // Search events
+    search.addEventListener('input', renderList);
+    clearSearch.addEventListener('click', () => {
+      search.value = '';
+      search.focus();
+      renderList();
+    });
 
+    // Filter Tab click handlers
+    filterTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        filterTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentFilter = tab.dataset.filter;
+        activeFilterLabel.textContent = `Filter: ${tab.textContent}`;
+        renderList();
+      });
+    });
+
+    // Random Game Launcher
+    document.getElementById('btn-random').addEventListener('click', () => {
+      if (!games.length) return;
+      const target = games[Math.floor(Math.random() * games.length)];
+      launchGame(target);
+    });
+
+    // Manual load more click
+    btnLoadMore.addEventListener('click', renderNextBatch);
+
+    // -------------------------------------------------------------------------
+    // Bulletproof Infinite Scroll Observer + Scroll Listener
+    // -------------------------------------------------------------------------
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && renderedCount < filteredGames.length) {
+          renderNextBatch();
+        }
+      }, { rootMargin: '800px 0px' });
+      observer.observe(sentinel);
+    }
+
+    // Window scroll fallback
+    let scrollScheduled = false;
+    window.addEventListener('scroll', () => {
+      if (scrollScheduled) return;
+      scrollScheduled = true;
+      requestAnimationFrame(() => {
+        if (renderedCount < filteredGames.length) {
+          const scrollBottom = window.innerHeight + window.scrollY;
+          const threshold = document.documentElement.scrollHeight - 900;
+          if (scrollBottom >= threshold) {
+            renderNextBatch();
+          }
+        }
+        scrollScheduled = false;
+      });
+    }, { passive: true });
+
+    // -------------------------------------------------------------------------
+    // UGS Catalog Discovery Engine
+    // -------------------------------------------------------------------------
+    const loadUgsCatalog = async () => {
+      let catalog = [];
+
+      // 1. Try local manifest first
+      try {
+        const res = await fetch(UGS_MANIFEST);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length) {
+            catalog = data;
+          }
+        }
+      } catch (_) {}
+
+      // 2. Fallback to remote repo games.js list if local manifest is unavailable
+      if (!catalog.length) {
+        try {
+          const res = await fetch('https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile@main/games.js');
+          if (res.ok) {
+            const code = await res.text();
+            const matches = code.match(/['"](cl[a-zA-Z0-9_\-\.]+)['"]/g);
+            if (matches && matches.length) {
+              catalog = [...new Set(matches.map(m => m.replace(/['"]/g, '')))];
+            }
+          }
+        } catch (_) {}
+      }
+
+      // 3. Fallback to staple UGS offline games if network is restricted
+      if (!catalog.length) {
+        catalog = [
+          "cl1v1lol", "clsm64", "cl3dash", "clslope", "cltunnelrush", "clretrobowl", "clcookieclicker",
+          "clsubway-surfers", "cleaglercraft", "clbadicecream", "cldrivemad", "clgeometrydash",
+          "clpaperio2", "clmotox3m", "clbitlife", "clcrossyroad", "clflappybird", "clhappywheels",
+          "clbindingofisaac", "clfnf", "clsuperhot", "clrooftopsnipers", "clbasketrandom", "clboxingrandom"
+        ];
+      }
+
+      // Merge into master game list avoiding duplicates
+      const localSet = new Set(localGames.map(g => g.toLowerCase()));
+      catalog.forEach(id => {
+        const clean = String(id).trim();
+        const base = clean.replace(/^cl/i, '').replace(/\.html$/i, '').toLowerCase();
+        if (!localSet.has(base)) {
+          games.push({ id: clean, kind: 'ugs' });
+          localSet.add(base);
+        }
+      });
+
+      renderList();
+    };
+
+    // -------------------------------------------------------------------------
+    // Web Proxy Controller
+    // -------------------------------------------------------------------------
     const proxyForm = document.getElementById('proxy-form');
     const proxyTarget = document.getElementById('proxy-target');
     const proxyStatus = document.getElementById('proxy-status');
+    const copyPassBtn = document.getElementById('copy-pass-btn');
     const PROXY_BASE = 'https://cf-proxy.9nome.workers.dev/';
-    proxyForm.addEventListener('submit', event => {
-      event.preventDefault();
+
+    copyPassBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText('123').then(() => {
+        const original = copyPassBtn.innerHTML;
+        copyPassBtn.innerHTML = `<strong>Worker Password:</strong> <code>123</code> <span style="color:var(--success)">✓ Copied!</span>`;
+        setTimeout(() => copyPassBtn.innerHTML = original, 2000);
+      });
+    });
+
+    proxyForm.addEventListener('submit', (e) => {
+      e.preventDefault();
       let destination;
-      try { destination = new URL(proxyTarget.value.trim()); }
-      catch { proxyStatus.textContent = 'Enter a valid full URL, such as https://example.com.'; return; }
-      if (!['http:', 'https:'].includes(destination.protocol)) {
-        proxyStatus.textContent = 'Only HTTP and HTTPS addresses are supported.';
+      try {
+        destination = new URL(proxyTarget.value.trim());
+      } catch (_) {
+        proxyStatus.textContent = 'Please enter a valid full URL, e.g. https://duckduckgo.com';
+        proxyStatus.style.color = 'var(--danger)';
         return;
       }
-      proxyStatus.textContent = 'Opening ' + destination.hostname + ' through the proxy…';
+      if (!['http:', 'https:'].includes(destination.protocol)) {
+        proxyStatus.textContent = 'Only HTTP and HTTPS URLs are supported.';
+        proxyStatus.style.color = 'var(--danger)';
+        return;
+      }
+      proxyStatus.textContent = `Routing ${destination.hostname} through Cloudflare proxy...`;
+      proxyStatus.style.color = 'var(--success)';
       window.open(PROXY_BASE + destination.href, '_blank', 'noopener,noreferrer');
     });
 
-    fetch(UGS_MANIFEST)
-      .then(response => {
-        if (!response.ok) throw new Error('Could not load the UGS game list');
-        return response.json();
-      })
-      .then(ids => {
-        const existing = new Set(games.map(game => game.id.toLowerCase()));
-        ids.forEach(id => {
-          const normalized = String(id);
-          if (!existing.has(normalized.toLowerCase())) {
-            games.push({ id: normalized, kind: 'ugs' });
-            existing.add(normalized.toLowerCase());
-          }
-        });
-        render();
-      })
-      .catch(error => {
-        console.warn('UGS catalog unavailable:', error);
-        render();
-      });
-
-    render();
+    // Initialize application
+    renderList();
+    loadUgsCatalog();
   </script>
-  <script>alert('Made with 🩷 by Bensi Froymovich')</script>
 </body>
 </html>
