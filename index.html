@@ -835,7 +835,7 @@
       if (e.key === 'Escape' && player.classList.contains('open')) {
         closePlayerModal();
       }
-      if (e.key === '/' && document.activeElement !== search && !player.classList.contains('open')) {
+      if (e.key === '\' && document.activeElement !== search && !player.classList.contains('open')) {
         e.preventDefault();
         search.focus();
       }
@@ -1250,12 +1250,12 @@
     const proxyTarget = document.getElementById('proxy-target');
     const proxyStatus = document.getElementById('proxy-status');
     const copyPassBtn = document.getElementById('copy-pass-btn');
-    const PROXY_BASE = 'https://cf-proxy.9nome.workers.dev/';
+    const PROXY_BASE = 'https://cf-pr0xy.9nome.workers.dev/';
 
     copyPassBtn.addEventListener('click', () => {
       navigator.clipboard.writeText('123').then(() => {
         const original = copyPassBtn.innerHTML;
-        copyPassBtn.innerHTML = `<strong>Worker Password:</strong> <code>123</code> <span style="color:var(--success)">✓ Copied!</span>`;
+        copyPassBtn.innerHTML = `<strong>Worker Password:</strong> <code>We no longer require a password</code> <span style="color:var(--success)">✓ Copied!</span>`;
         setTimeout(() => copyPassBtn.innerHTML = original, 2000);
       });
     });
